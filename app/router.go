@@ -1,23 +1,21 @@
 package app
 
 import (
+	"github.com/gofiber/fiber/v2"
 	"golang_template/handler/controllers"
 	"golang_template/handler/middlewares"
 	"golang_template/handler/routers"
-	"golang_template/internal/config"
-
-	"github.com/gofiber/fiber/v2"
 )
 
-func (a *application) InitRouter(app *fiber.App, controller controllers.Controllers, cfg *config.JWTConfig) routers.Router {
+func (a *application) InitRouter(app *fiber.App, controller controllers.Controllers) routers.Router {
 	router := routers.NewRouter(controller)
-	middleware := middlewares.NewMiddleware(cfg)
+	middleware := middlewares.NewMiddleware()
 
 	routeGroup := app.Group("/api")
 	protectedRoutes := routeGroup.Group("/protected")
 	publicRoutes := routeGroup.Group("/public")
 
-	protectedRoutes.Use(middleware.Auth())
+	protectedRoutes.Use(middleware.Auth().Handle())
 
 	router.AddPublicRoutes(publicRoutes)
 	router.AddProtectedRoutes(protectedRoutes)

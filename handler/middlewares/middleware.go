@@ -1,6 +1,9 @@
 package middlewares
 
-import "golang_template/internal/config"
+import (
+	"golang_template/internal/config"
+	"log"
+)
 
 // Authentication
 // JWT
@@ -13,8 +16,12 @@ type middleware struct {
 	authMiddleware AuthMiddleware
 }
 
-func NewMiddleware(cfg *config.JWTConfig) Middleware {
-	authMiddle := NewAuthMiddleware(cfg)
+func NewMiddleware() Middleware {
+	cfg, err := config.LoadConfig("config/config.yml")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err.Error())
+	}
+	authMiddle := NewAuthMiddleware(&cfg.JWT)
 	return &middleware{authMiddleware: authMiddle}
 }
 
