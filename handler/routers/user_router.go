@@ -7,7 +7,8 @@ import (
 )
 
 type UserRouter interface {
-	AddRoutes(router fiber.Router)
+	AddProtectedRoutes(router fiber.Router)
+	AddPublicRoutes(router fiber.Router)
 }
 
 type userRouter struct {
@@ -18,8 +19,10 @@ func NewUserRouter(userController controllers.UserController) UserRouter {
 	return &userRouter{Controller: userController}
 }
 
-func (r userRouter) AddRoutes(router fiber.Router) {
-	// init routes for user
-	// has controller
+func (r userRouter) AddProtectedRoutes(router fiber.Router) {
+
+}
+
+func (r userRouter) AddPublicRoutes(router fiber.Router) {
 	router.Get("/user", r.Controller.Login)
 }

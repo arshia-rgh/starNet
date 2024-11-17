@@ -7,7 +7,8 @@ import (
 )
 
 type Router interface {
-	AddRoutes(router fiber.Router)
+	AddProtectedRoutes(router fiber.Router)
+	AddPublicRoutes(router fiber.Router)
 }
 
 type router struct {
@@ -19,12 +20,12 @@ func NewRouter(controllers controllers.Controllers) Router {
 	return &router{userRouter: userRouter}
 }
 
-func (r router) AddRoutes(router fiber.Router) {
+// protected routes means protected by auth (logged in needed)
 
-	// router
-	// init user router, etc ...
-	// rate limiter
-	// CORS
-	r.userRouter.AddRoutes(router)
+func (r router) AddProtectedRoutes(router fiber.Router) {
 
+}
+
+func (r router) AddPublicRoutes(router fiber.Router) {
+	r.userRouter.AddPublicRoutes(router)
 }
