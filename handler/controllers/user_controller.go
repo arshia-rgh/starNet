@@ -1,8 +1,13 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v2"
+	"golang_template/internal/ent"
 	"golang_template/internal/services"
+	"golang_template/internal/services/dto"
+	"golang_template/pkg"
+	"log"
 )
 
 type UserController interface {
@@ -20,10 +25,20 @@ func NewUserController(userService services.UserService) UserController {
 }
 
 func (c *userController) Login(ctx *fiber.Ctx) error {
-	err := ctx.JSON("succeed")
-	if err != nil {
-		return err
+	var user dto.User
+	if err := ctx.BodyParser(&user); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
 	}
-	return nil
-	//make dto
+	token, err := c.userService.Login(ctx, user)
+	if err != nil {
+		log.Println(err)
+		if ent.IsNotFound(err) {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "user with this username and password doesnt exist"})
+		}
+		if errors.Is(err, pkg.ErrInvalidToken) {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "token is invalid"})
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
+	}
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"token": token})
 }

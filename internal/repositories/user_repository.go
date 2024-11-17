@@ -28,7 +28,7 @@ type userRepository struct {
 }
 
 func test(err error) {
-	if err == ErrUserNotFound {
+	if errors.Is(err, ErrUserNotFound) {
 		fmt.Println("user not found")
 	}
 }
