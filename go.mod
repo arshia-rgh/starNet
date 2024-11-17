@@ -8,12 +8,14 @@ require (
 	entgo.io/ent v0.14.1
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/gofiber/fiber/v2 v2.52.5
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	go.uber.org/fx v1.23.0
+	golang.org/x/crypto v0.28.0
 )
 
 require (
@@ -58,7 +60,6 @@ require (
 	go.uber.org/dig v1.18.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/mod v0.20.0 // indirect
 	golang.org/x/net v0.30.0 // indirect

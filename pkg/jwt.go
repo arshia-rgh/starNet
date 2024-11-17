@@ -21,7 +21,7 @@ func VerifyToken(token string, secretKey string) (int, error) {
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (any, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			return nil, errors.New("unexpected method")
+			return nil, jwt.ErrSignatureInvalid
 		}
 		return []byte(secretKey), nil
 	})
