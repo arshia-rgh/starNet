@@ -26,8 +26,11 @@ func (a *authMiddleware) Handle() fiber.Handler {
 		if authorization == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "credentials not provided"})
 		}
-		token := strings.TrimPrefix(authorization, "Bearer")
+		token := strings.TrimSpace(strings.TrimPrefix(authorization, "Bearer"))
 
+		if token == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "malformed token"})
+		}
 		userID, err := pkg.VerifyToken(token, a.cfg.Secret)
 		if err != nil {
 			if errors.Is(err, pkg.ErrInvalidToken) {
