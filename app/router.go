@@ -12,13 +12,22 @@ func (a *application) InitRouter(app *fiber.App, controller controllers.Controll
 	middleware := middlewares.NewMiddleware()
 
 	routeGroup := app.Group("/api")
-	protectedRoutes := routeGroup.Group("/protected")
-	publicRoutes := routeGroup.Group("/public")
-
-	protectedRoutes.Use(middleware.Auth().Handle())
+	protectedRoutes := setupProtectedRoutes(routeGroup.Group("/protected"), middleware)
+	publicRoutes := setupPublicRoutes(routeGroup.Group("/public"))
 
 	router.AddPublicRoutes(publicRoutes)
 	router.AddProtectedRoutes(protectedRoutes)
 
 	return router
+}
+
+func setupProtectedRoutes(group fiber.Router, middleware middlewares.Middleware) fiber.Router {
+	group.Use(middleware.Auth().Handle())
+
+	return group
+}
+
+func setupPublicRoutes(group fiber.Router) fiber.Router {
+	// any additional logic or middlewares if needed
+	return group
 }
