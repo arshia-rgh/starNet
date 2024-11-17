@@ -1,5 +1,7 @@
 package controllers
 
+import "golang_template/internal/services"
+
 type Controllers interface {
 	UserController() UserController
 }
@@ -8,8 +10,8 @@ type controllers struct {
 	userController UserController
 }
 
-func NewControllers() Controllers {
-	userController := NewUserController()
+func NewControllers(service services.Service) Controllers {
+	userController := NewUserController(service.UserService())
 	return &controllers{userController: userController}
 }
 

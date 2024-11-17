@@ -10,7 +10,7 @@ db:
   port: "5432"
   user: "postgres"
   password: "Arshio12*"
-  dbname: "myapp"
+  dbname: "starnet"
   sslmode: "disable"
   max_conns: 20
   min_conns: 1
