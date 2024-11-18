@@ -62,6 +62,6 @@ func (v *videoController) PlayVideo(ctx *fiber.Ctx) error {
 		}
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "server error"})
 	}
-	return ctx.SendFile(dbVideo.FilePath)
+	return ctx.Status(fiber.StatusOK).JSON(dbVideo.FilePath)
 
 }
