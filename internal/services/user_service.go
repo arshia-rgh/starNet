@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	config2 "golang_template/internal/config"
 	"golang_template/internal/ent"
 	"golang_template/internal/repositories"
@@ -28,14 +29,16 @@ func (s *userService) Login(ctx *fiber.Ctx, user dto.User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	hashedPassword, _ := pkg.HashPassword(user.Password)
-	user.Password = hashedPassword
+
 	storedUser, err := s.repo.Get(ctx.Context(), user)
 	if err != nil {
 		return "", err
 	}
+	if !pkg.VerifyPassword(user.Password, storedUser.Password) {
+		return "", fmt.Errorf("password is wrong")
+	}
 
-	token, err := pkg.GenerateToken(storedUser.ID, user.Role, config.JWT.Secret)
+	token, err := pkg.GenerateToken(storedUser.ID, string(storedUser.Role), config.JWT.Secret)
 	if err != nil {
 		return "", err
 	}
@@ -44,6 +47,8 @@ func (s *userService) Login(ctx *fiber.Ctx, user dto.User) (string, error) {
 }
 
 func (s *userService) Register(ctx *fiber.Ctx, user dto.User) (*ent.User, error) {
+	hashedPass, _ := pkg.HashPassword(user.Password)
+	user.Password = hashedPass
 	return s.repo.CreateUser(ctx.Context(), user)
 
 }

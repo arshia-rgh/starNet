@@ -10,6 +10,7 @@ import (
 type VideoController interface {
 	UploadVideo(ctx *fiber.Ctx) error
 	ShowAllVideos(ctx *fiber.Ctx) error
+	PlayVideo(ctx *fiber.Ctx) error
 }
 
 type videoController struct {
@@ -49,4 +50,18 @@ func (v *videoController) ShowAllVideos(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
 	}
 	return ctx.Status(fiber.StatusOK).JSON(videos)
+}
+
+func (v *videoController) PlayVideo(ctx *fiber.Ctx) error {
+	title := ctx.Params("title")
+	video := dto.Video{Title: title}
+	dbVideo, err := v.videoService.GetVideoByTitle(ctx, video)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "video not found"})
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "server error"})
+	}
+	return ctx.SendFile(dbVideo.FilePath)
+
 }

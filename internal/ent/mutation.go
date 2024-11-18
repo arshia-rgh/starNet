@@ -245,9 +245,22 @@ func (m *UserMutation) OldRole(ctx context.Context) (v user.Role, err error) {
 	return oldValue.Role, nil
 }
 
+// ClearRole clears the value of the "role" field.
+func (m *UserMutation) ClearRole() {
+	m.role = nil
+	m.clearedFields[user.FieldRole] = struct{}{}
+}
+
+// RoleCleared returns if the "role" field was cleared in this mutation.
+func (m *UserMutation) RoleCleared() bool {
+	_, ok := m.clearedFields[user.FieldRole]
+	return ok
+}
+
 // ResetRole resets all changes to the "role" field.
 func (m *UserMutation) ResetRole() {
 	m.role = nil
+	delete(m.clearedFields, user.FieldRole)
 }
 
 // Where appends a list predicates to the UserMutation builder.
@@ -382,7 +395,11 @@ func (m *UserMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *UserMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(user.FieldRole) {
+		fields = append(fields, user.FieldRole)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -395,6 +412,11 @@ func (m *UserMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *UserMutation) ClearField(name string) error {
+	switch name {
+	case user.FieldRole:
+		m.ClearRole()
+		return nil
+	}
 	return fmt.Errorf("unknown User nullable field %s", name)
 }
 

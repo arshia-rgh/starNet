@@ -213,6 +213,16 @@ func RoleNotIn(vs ...Role) predicate.User {
 	return predicate.User(sql.FieldNotIn(FieldRole, vs...))
 }
 
+// RoleIsNil applies the IsNil predicate on the "role" field.
+func RoleIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldRole))
+}
+
+// RoleNotNil applies the NotNil predicate on the "role" field.
+func RoleNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldRole))
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(sql.AndPredicates(predicates...))

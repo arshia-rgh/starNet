@@ -42,7 +42,7 @@ func NewUserRepository(db database.Database) UserRepository {
 func (r userRepository) Get(ctx context.Context, userDto dto.User) (*ent.User, error) {
 	userData, err := r.db.EntClient().User.
 		Query().
-		Where(user.Username(userDto.Username), user.Password(userDto.Password)).
+		Where(user.UsernameEQ(userDto.Username)).
 		First(ctx)
 
 	if ent.IsNotFound(err) {

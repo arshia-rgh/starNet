@@ -69,6 +69,12 @@ func (uu *UserUpdate) SetNillableRole(u *user.Role) *UserUpdate {
 	return uu
 }
 
+// ClearRole clears the value of the "role" field.
+func (uu *UserUpdate) ClearRole() *UserUpdate {
+	uu.mutation.ClearRole()
+	return uu
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -142,6 +148,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeEnum, value)
 	}
+	if uu.mutation.RoleCleared() {
+		_spec.ClearField(user.FieldRole, field.TypeEnum)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -201,6 +210,12 @@ func (uuo *UserUpdateOne) SetNillableRole(u *user.Role) *UserUpdateOne {
 	if u != nil {
 		uuo.SetRole(*u)
 	}
+	return uuo
+}
+
+// ClearRole clears the value of the "role" field.
+func (uuo *UserUpdateOne) ClearRole() *UserUpdateOne {
+	uuo.mutation.ClearRole()
 	return uuo
 }
 
@@ -306,6 +321,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Role(); ok {
 		_spec.SetField(user.FieldRole, field.TypeEnum, value)
+	}
+	if uuo.mutation.RoleCleared() {
+		_spec.ClearField(user.FieldRole, field.TypeEnum)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

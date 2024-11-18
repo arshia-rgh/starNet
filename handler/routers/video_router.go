@@ -20,6 +20,7 @@ func NewVideoRouter(controller controllers.VideoController) VideoRouter {
 
 func (v *videoRouter) AddProtectedRoutes(router fiber.Router) {
 	router.Post("/upload-video", v.Controller.UploadVideo)
+	router.Get("/videos/:title/play", v.Controller.PlayVideo)
 }
 func (v *videoRouter) AddPublicRoutes(router fiber.Router) {
 	router.Get("/videos", v.Controller.ShowAllVideos)
