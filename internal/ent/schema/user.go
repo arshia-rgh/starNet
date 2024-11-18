@@ -15,6 +15,7 @@ func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("username").NotEmpty().Unique(),
 		field.String("password").NotEmpty(),
+		field.Enum("role").Values("admin", "normal"),
 	}
 }
 

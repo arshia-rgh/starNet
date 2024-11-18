@@ -35,7 +35,7 @@ func (s *userService) Login(ctx *fiber.Ctx, user dto.User) (string, error) {
 		return "", err
 	}
 
-	token, err := pkg.GenerateToken(storedUser.ID, config.JWT.Secret)
+	token, err := pkg.GenerateToken(storedUser.ID, user.Role, config.JWT.Secret)
 	if err != nil {
 		return "", err
 	}

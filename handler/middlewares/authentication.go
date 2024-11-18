@@ -31,7 +31,7 @@ func (a *authMiddleware) Handle() fiber.Handler {
 		if token == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "malformed token"})
 		}
-		userID, err := pkg.VerifyToken(token, a.cfg.Secret)
+		userID, userRole, err := pkg.VerifyToken(token, a.cfg.Secret)
 		if err != nil {
 			if errors.Is(err, pkg.ErrInvalidToken) {
 				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -40,7 +40,8 @@ func (a *authMiddleware) Handle() fiber.Handler {
 			}
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed validating token"})
 		}
-		c.Locals("user", userID)
+		c.Locals("userID", userID)
+		c.Locals("userRole", userRole)
 		return c.Next()
 
 	}
