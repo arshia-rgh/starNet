@@ -20,7 +20,7 @@ var (
 
 type UserRepository interface {
 	Get(ctx context.Context, userDto dto.User) (*ent.User, error)
-	CreateUser(ctx context.Context, userData dto.User) error
+	CreateUser(ctx context.Context, userData dto.User) (*ent.User, error)
 }
 
 type userRepository struct {
@@ -55,10 +55,10 @@ func (r userRepository) Get(ctx context.Context, userDto dto.User) (*ent.User, e
 	return userData, nil
 }
 
-func (r userRepository) CreateUser(ctx context.Context, userData dto.User) error {
+func (r userRepository) CreateUser(ctx context.Context, userData dto.User) (*ent.User, error) {
 
 	// Create new user
-	_, err := r.db.EntClient().User.
+	user, err := r.db.EntClient().User.
 		Create().
 		SetUsername(userData.Username).
 		SetPassword(userData.Password).
@@ -67,8 +67,8 @@ func (r userRepository) CreateUser(ctx context.Context, userData dto.User) error
 	log.Println(err)
 
 	if err != nil {
-		return fmt.Errorf("creating user: %w", err)
+		return nil, fmt.Errorf("creating user: %w", err)
 	}
 
-	return nil
+	return user, nil
 }

@@ -2,6 +2,7 @@ package services
 
 import (
 	config2 "golang_template/internal/config"
+	"golang_template/internal/ent"
 	"golang_template/internal/repositories"
 	"golang_template/internal/services/dto"
 	"golang_template/pkg"
@@ -11,7 +12,7 @@ import (
 
 type UserService interface {
 	Login(ctx *fiber.Ctx, user dto.User) (string, error)
-	Register(ctx *fiber.Ctx, user dto.User) error
+	Register(ctx *fiber.Ctx, user dto.User) (*ent.User, error)
 }
 
 type userService struct {
@@ -42,7 +43,7 @@ func (s *userService) Login(ctx *fiber.Ctx, user dto.User) (string, error) {
 	return token, nil
 }
 
-func (s *userService) Register(ctx *fiber.Ctx, user dto.User) error {
+func (s *userService) Register(ctx *fiber.Ctx, user dto.User) (*ent.User, error) {
 	return s.repo.CreateUser(ctx.Context(), user)
 
 }

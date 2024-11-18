@@ -45,5 +45,13 @@ func (c *userController) Login(ctx *fiber.Ctx) error {
 }
 
 func (c *userController) Register(ctx *fiber.Ctx) error {
-
+	var user dto.User
+	if err := ctx.BodyParser(&user); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "wrong data format"})
+	}
+	dbUser, err := c.userService.Register(ctx, user)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to create new user"})
+	}
+	return ctx.Status(fiber.StatusCreated).JSON(dbUser)
 }

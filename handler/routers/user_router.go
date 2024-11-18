@@ -24,5 +24,6 @@ func (r userRouter) AddProtectedRoutes(router fiber.Router) {
 }
 
 func (r userRouter) AddPublicRoutes(router fiber.Router) {
-	router.Get("/user", r.Controller.Login)
+	router.Post("/login", r.Controller.Login)
+	router.Post("/register", r.Controller.Register)
 }
