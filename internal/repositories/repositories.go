@@ -20,7 +20,8 @@ type repository struct {
 
 func NewRepository(db database.Database) Repository {
 	userRepository := NewUserRepository(db)
-	return &repository{userRepository: userRepository}
+	videoRepository := NewVideoRepository(db)
+	return &repository{userRepository: userRepository, videoRepository: videoRepository}
 }
 
 func (r *repository) UserRepository() UserRepository {

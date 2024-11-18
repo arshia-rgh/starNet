@@ -14,7 +14,8 @@ type service struct {
 
 func NewService(repo repositories.Repository) Service {
 	userService := NewUserService(repo.UserRepository())
-	return &service{userService: userService}
+	videoService := NewVideoService(repo.VideoRepository())
+	return &service{userService: userService, videoService: videoService}
 }
 
 func (s *service) UserService() UserService   { return s.userService }

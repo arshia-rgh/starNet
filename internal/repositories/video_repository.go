@@ -3,13 +3,15 @@ package repositories
 import (
 	"context"
 	"golang_template/internal/database"
+	"golang_template/internal/ent"
+	VideoClient "golang_template/internal/ent/video"
 	"golang_template/internal/services/dto"
 )
 
 type VideoRepository interface {
-	GetAllVideos(ctx context.Context, video dto.Video) ([]*dto.Video, error)
-	GetVideoByTitle(ctx context.Context, video dto.Video) (*dto.Video, error)
-	CreateVideo(ctx context.Context, video dto.Video) (*dto.Video, error)
+	GetAllVideos(ctx context.Context) ([]*ent.Video, error)
+	GetVideoByTitle(ctx context.Context, video dto.Video) (*ent.Video, error)
+	CreateVideo(ctx context.Context, video dto.Video) (*ent.Video, error)
 }
 
 type videoRepository struct {
@@ -20,16 +22,23 @@ func NewVideoRepository(db database.Database) VideoRepository {
 	return &videoRepository{db: db}
 }
 
-func (v *videoRepository) GetAllVideos(ctx context.Context, video dto.Video) ([]*dto.Video, error) {
-	return nil, nil
+func (v *videoRepository) GetAllVideos(ctx context.Context) ([]*ent.Video, error) {
+	return v.db.EntClient().Video.Query().All(ctx)
 }
 
-func (v *videoRepository) GetVideoByTitle(ctx context.Context, video dto.Video) (*dto.Video, error) {
-	return nil, nil
+func (v *videoRepository) GetVideoByTitle(ctx context.Context, video dto.Video) (*ent.Video, error) {
+	return v.db.EntClient().Video.Query().Where(VideoClient.TitleEQ(video.Title)).Only(ctx)
 
 }
 
-func (v *videoRepository) CreateVideo(ctx context.Context, video dto.Video) (*dto.Video, error) {
-	return nil, nil
+func (v *videoRepository) CreateVideo(ctx context.Context, video dto.Video) (*ent.Video, error) {
+	videoCreate := v.db.EntClient().Video.Create()
+	videoCreate.SetTitle(video.Title)
+	if video.Description != "" {
+		videoCreate.SetDescription(video.Description)
+	}
+	videoCreate.SetFilePath(video.FilePath)
+
+	return videoCreate.Save(ctx)
 
 }
