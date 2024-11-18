@@ -11,6 +11,7 @@ import (
 
 type UserService interface {
 	Login(ctx *fiber.Ctx, user dto.User) (string, error)
+	Register(ctx *fiber.Ctx, user dto.User) error
 }
 
 type userService struct {
@@ -39,4 +40,9 @@ func (s *userService) Login(ctx *fiber.Ctx, user dto.User) (string, error) {
 	}
 
 	return token, nil
+}
+
+func (s *userService) Register(ctx *fiber.Ctx, user dto.User) error {
+	return s.repo.CreateUser(ctx.Context(), user)
+
 }

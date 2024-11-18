@@ -12,6 +12,7 @@ import (
 
 type UserController interface {
 	Login(ctx *fiber.Ctx) error
+	Register(ctx *fiber.Ctx) error
 }
 
 type userController struct {
@@ -41,4 +42,8 @@ func (c *userController) Login(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
 	}
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"token": token})
+}
+
+func (c *userController) Register(ctx *fiber.Ctx) error {
+
 }
