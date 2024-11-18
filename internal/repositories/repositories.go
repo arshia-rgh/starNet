@@ -6,6 +6,7 @@ import (
 
 type Repository interface {
 	UserRepository() UserRepository
+	VideoRepository() VideoRepository
 }
 
 // var (
@@ -13,7 +14,8 @@ type Repository interface {
 // )
 
 type repository struct {
-	userRepository UserRepository
+	userRepository  UserRepository
+	videoRepository VideoRepository
 }
 
 func NewRepository(db database.Database) Repository {
@@ -24,3 +26,5 @@ func NewRepository(db database.Database) Repository {
 func (r *repository) UserRepository() UserRepository {
 	return r.userRepository
 }
+
+func (r *repository) VideoRepository() VideoRepository { return r.videoRepository }
