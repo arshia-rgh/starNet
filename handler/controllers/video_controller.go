@@ -5,6 +5,9 @@ import (
 	"golang_template/internal/ent"
 	"golang_template/internal/services"
 	"golang_template/internal/services/dto"
+	"log"
+	"os"
+	filepath2 "path/filepath"
 )
 
 type VideoController interface {
@@ -27,10 +30,31 @@ func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "only admins can access"})
 	}
 
-	var video dto.Video
-	if err := ctx.BodyParser(&video); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "invalid data type"})
+	title := ctx.FormValue("title")
+	description := ctx.FormValue("description")
+
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		log.Println(err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "failed to get video file"})
 	}
+
+	filepath := filepath2.Join("videos", file.Filename)
+
+	if err := os.MkdirAll("videos", os.ModePerm); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to create upload directory"})
+	}
+
+	if err := ctx.SaveFile(file, filepath); err != nil {
+		log.Println(err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to save video file"})
+	}
+
+	var video dto.Video
+	video.Title = title
+	video.Description = description
+	video.FilePath = filepath
+
 	dbVideo, err := v.videoService.CreateVideo(ctx, video)
 	if err != nil {
 		if ent.IsConstraintError(err) {
@@ -62,6 +86,6 @@ func (v *videoController) PlayVideo(ctx *fiber.Ctx) error {
 		}
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "server error"})
 	}
-	return ctx.Status(fiber.StatusOK).JSON(dbVideo.FilePath)
+	return ctx.SendFile(dbVideo.FilePath)
 
 }
