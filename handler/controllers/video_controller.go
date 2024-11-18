@@ -30,29 +30,26 @@ func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "only admins can access"})
 	}
 
-	title := ctx.FormValue("title")
-	description := ctx.FormValue("description")
-
-	file, err := ctx.FormFile("file")
+	uploadDTO, err := parseVideoUploadDTO(ctx)
 	if err != nil {
 		log.Println(err)
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "failed to get video file"})
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "failed to parse form values and file"})
 	}
 
-	filepath := filepath2.Join("videos", file.Filename)
+	filepath := filepath2.Join("videos", uploadDTO.File.Filename)
 
 	if err := os.MkdirAll("videos", os.ModePerm); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to create upload directory"})
 	}
 
-	if err := ctx.SaveFile(file, filepath); err != nil {
+	if err := ctx.SaveFile(uploadDTO.File, filepath); err != nil {
 		log.Println(err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to save video file"})
 	}
 
 	var video dto.Video
-	video.Title = title
-	video.Description = description
+	video.Title = uploadDTO.Title
+	video.Description = uploadDTO.Description
 	video.FilePath = filepath
 
 	dbVideo, err := v.videoService.CreateVideo(ctx, video)
@@ -63,6 +60,21 @@ func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
 	}
 	return ctx.Status(fiber.StatusOK).JSON(dbVideo)
+}
+
+func parseVideoUploadDTO(ctx *fiber.Ctx) (*dto.VideoUpload, error) {
+	title := ctx.FormValue("title")
+	description := ctx.FormValue("description")
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.VideoUpload{
+		Title:       title,
+		Description: description,
+		File:        file,
+	}, nil
 }
 
 func (v *videoController) ShowAllVideos(ctx *fiber.Ctx) error {
