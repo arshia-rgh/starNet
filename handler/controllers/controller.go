@@ -4,6 +4,7 @@ import "golang_template/internal/services"
 
 type Controllers interface {
 	UserController() UserController
+	VideoController() VideoController
 }
 
 type controllers struct {
