@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"golang_template/internal/ent/user"
+	"golang_template/internal/ent/video"
 	"reflect"
 	"sync"
 
@@ -73,7 +74,8 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			user.Table: user.ValidColumn,
+			user.Table:  user.ValidColumn,
+			video.Table: video.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

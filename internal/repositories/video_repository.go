@@ -21,13 +21,15 @@ func NewVideoRepository(db database.Database) VideoRepository {
 }
 
 func (v *videoRepository) GetAllVideos(ctx context.Context, video dto.Video) ([]*dto.Video, error) {
-
+	return nil, nil
 }
 
 func (v *videoRepository) GetVideoByTitle(ctx context.Context, video dto.Video) (*dto.Video, error) {
+	return nil, nil
 
 }
 
 func (v *videoRepository) CreateVideo(ctx context.Context, video dto.Video) (*dto.Video, error) {
+	return nil, nil
 
 }

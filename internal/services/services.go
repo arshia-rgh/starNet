@@ -4,10 +4,12 @@ import "golang_template/internal/repositories"
 
 type Service interface {
 	UserService() UserService
+	VideoService() VideoService
 }
 
 type service struct {
-	userService UserService
+	userService  UserService
+	videoService VideoService
 }
 
 func NewService(repo repositories.Repository) Service {
@@ -15,4 +17,5 @@ func NewService(repo repositories.Repository) Service {
 	return &service{userService: userService}
 }
 
-func (s *service) UserService() UserService { return s.userService }
+func (s *service) UserService() UserService   { return s.userService }
+func (s *service) VideoService() VideoService { return s.videoService }
