@@ -5,9 +5,11 @@ import (
 	"golang_template/internal/ent"
 	"golang_template/internal/services"
 	"golang_template/internal/services/dto"
+	"io"
 	"log"
 	"os"
 	filepath2 "path/filepath"
+	"strconv"
 )
 
 type VideoController interface {
@@ -35,36 +37,63 @@ func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
 		log.Println(err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "failed to parse form values and file"})
 	}
-
-	filepath := filepath2.Join("videos", uploadDTO.File.Filename)
-
 	if err := os.MkdirAll("videos", os.ModePerm); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to create upload directory"})
 	}
 
-	if err := ctx.SaveFile(uploadDTO.File, filepath); err != nil {
-		log.Println(err)
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to save video file"})
-	}
+	tempFilePath := filepath2.Join("videos", uploadDTO.Title+"_tmp")
 
-	var video dto.Video
-	video.Title = uploadDTO.Title
-	video.Description = uploadDTO.Description
-	video.FilePath = filepath
-
-	dbVideo, err := v.videoService.CreateVideo(ctx, video)
+	file, err := uploadDTO.File.Open()
 	if err != nil {
-		if ent.IsConstraintError(err) {
-			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "video with this title already exists"})
-		}
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
+		log.Println(err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to open file chunk"})
 	}
-	return ctx.Status(fiber.StatusOK).JSON(dbVideo)
+	defer file.Close()
+	tempFile, err := os.OpenFile(tempFilePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Println(err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to open temporary file"})
+	}
+	defer tempFile.Close()
+
+	if _, err := io.Copy(tempFile, file); err != nil {
+		log.Println(err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to write file chunk"})
+	}
+	if uploadDTO.ChunkNumber == uploadDTO.TotalChunk {
+		finalFilePath := filepath2.Join("videos", uploadDTO.Title)
+		if err := os.Rename(tempFilePath, finalFilePath); err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "failed to finalize video file"})
+		}
+
+		var video dto.Video
+		video.Title = uploadDTO.Title
+		video.Description = uploadDTO.Description
+		video.FilePath = finalFilePath
+
+		dbVideo, err := v.videoService.CreateVideo(ctx, video)
+		if err != nil {
+			if ent.IsConstraintError(err) {
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "video with this title already exists"})
+			}
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
+		}
+		return ctx.Status(fiber.StatusOK).JSON(dbVideo)
+	}
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "chunk uploaded successfully"})
 }
 
 func parseVideoUploadDTO(ctx *fiber.Ctx) (*dto.VideoUpload, error) {
 	title := ctx.FormValue("title")
 	description := ctx.FormValue("description")
+	chunkNumber, err := strconv.Atoi(ctx.FormValue("chunk_number"))
+	if err != nil {
+		return nil, err
+	}
+	totalChunks, err := strconv.Atoi(ctx.FormValue("total_chunks"))
+	if err != nil {
+		return nil, err
+	}
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		return nil, err
@@ -73,6 +102,8 @@ func parseVideoUploadDTO(ctx *fiber.Ctx) (*dto.VideoUpload, error) {
 	return &dto.VideoUpload{
 		Title:       title,
 		Description: description,
+		ChunkNumber: chunkNumber,
+		TotalChunk:  totalChunks,
 		File:        file,
 	}, nil
 }

@@ -15,5 +15,7 @@ type Video struct {
 type VideoUpload struct {
 	Title       string                `json:"title"`
 	Description string                `json:"description"`
+	ChunkNumber int                   `json:"chunk_number"`
+	TotalChunk  int                   `json:"total_chunk"`
 	File        *multipart.FileHeader `json:"file"`
 }
