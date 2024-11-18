@@ -7,14 +7,17 @@ type Controllers interface {
 }
 
 type controllers struct {
-	userController UserController
+	userController  UserController
+	videoController VideoController
 }
 
 func NewControllers(service services.Service) Controllers {
 	userController := NewUserController(service.UserService())
-	return &controllers{userController: userController}
+	videoController := NewVideoController(service.VideoService())
+	return &controllers{userController: userController, videoController: videoController}
 }
 
 func (c *controllers) UserController() UserController {
 	return c.userController
 }
+func (c *controllers) VideoController() VideoController { return c.videoController }
