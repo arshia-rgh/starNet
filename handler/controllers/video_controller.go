@@ -108,6 +108,16 @@ func parseVideoUploadDTO(ctx *fiber.Ctx) (*dto.VideoUpload, error) {
 	}, nil
 }
 
+//func parseVideoUploadDTO(ctx *fiber.Ctx) (*dto.VideoUpload, error) {
+//	var video dto.VideoUpload
+//	if err := ctx.Bind(); err != nil {
+//		log.Println(err)
+//		return nil, err
+//	}
+//
+//	return &video, nil
+//}
+
 func (v *videoController) ShowAllVideos(ctx *fiber.Ctx) error {
 	videos, err := v.videoService.GetAllVideos(ctx)
 	if err != nil {
@@ -129,6 +139,6 @@ func (v *videoController) PlayVideo(ctx *fiber.Ctx) error {
 		}
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "server error"})
 	}
-	return ctx.SendFile(dbVideo.FilePath)
+	return ctx.Status(fiber.StatusOK).JSON(dbVideo.FilePath)
 
 }
