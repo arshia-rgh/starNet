@@ -225,6 +225,14 @@ func Test_videoController_ShowAllVideos(t *testing.T) {
 				videoService: tt.fields.videoService,
 			}
 			app.Get("/videos", v.ShowAllVideos)
+			req := httptest.NewRequest("GET", "/videos", nil)
+			req.Header.Set("Content-Type", "application/json")
+
+			res, err := app.Test(req, -1)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
 		})
 	}
 }
