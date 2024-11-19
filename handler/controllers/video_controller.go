@@ -122,7 +122,7 @@ func (v *videoController) ShowAllVideos(ctx *fiber.Ctx) error {
 	videos, err := v.videoService.GetAllVideos(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "no videos found"})
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "no videos found"})
 		}
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
 	}

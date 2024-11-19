@@ -39,6 +39,9 @@ func (m *MockVideoService) GetAllVideos(ctx *fiber.Ctx) ([]*ent.Video, error) {
 		}
 		v = append(v, entVideo)
 	}
+	if len(v) == 0 {
+		return nil, &ent.NotFoundError{}
+	}
 	return v, nil
 }
 func (m *MockVideoService) GetVideoByTitle(ctx *fiber.Ctx, video dto.Video) (*ent.Video, error) {
@@ -216,7 +219,11 @@ func Test_videoController_ShowAllVideos(t *testing.T) {
 			fields:     fields{videoService: &MockVideoService{testVideos}},
 			wantStatus: 200,
 		},
-		{},
+		{
+			name:       "get all videos with no videos found",
+			fields:     fields{videoService: &MockVideoService{}},
+			wantStatus: 404,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
