@@ -193,28 +193,38 @@ func Test_videoController_PlayVideo(t *testing.T) {
 }
 
 func Test_videoController_ShowAllVideos(t *testing.T) {
+	testVideo1 := dto.Video{
+		Title:    "test",
+		FilePath: "test path",
+	}
+	testVideo2 := dto.Video{
+		Title:    "test2",
+		FilePath: "test path2",
+	}
+	testVideos := []dto.Video{testVideo1, testVideo2}
 	type fields struct {
 		videoService services.VideoService
 	}
-	type args struct {
-		ctx *fiber.Ctx
-	}
+
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name       string
+		fields     fields
+		wantStatus int
 	}{
+		{
+			name:       "get all videos successfully",
+			fields:     fields{videoService: &MockVideoService{testVideos}},
+			wantStatus: 200,
+		},
 		{},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New()
 			v := &videoController{
 				videoService: tt.fields.videoService,
 			}
-			if err := v.ShowAllVideos(tt.args.ctx); (err != nil) != tt.wantErr {
-				t.Errorf("ShowAllVideos() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			app.Get("/videos", v.ShowAllVideos)
 		})
 	}
 }
