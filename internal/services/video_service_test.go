@@ -19,7 +19,7 @@ func (mv *MockVideoRepository) GetAllVideos(ctx context.Context) ([]*dto.VideoRe
 	for _, video := range mv.videos {
 		videoResponses = append(videoResponses, &dto.VideoResponse{
 			Title: video.Title,
-			// Add other fields as necessary
+			// others if necessary
 		})
 	}
 	return videoResponses, nil
@@ -30,7 +30,7 @@ func (mv *MockVideoRepository) GetVideoByTitle(ctx context.Context, video dto.Vi
 		if v.Title == video.Title {
 			return &dto.VideoResponse{
 				Title: v.Title,
-				// Add other fields as necessary
+				// others if necessary
 			}, nil
 		}
 	}
@@ -44,7 +44,7 @@ func (mv *MockVideoRepository) CreateVideo(ctx context.Context, video dto.Video)
 	mv.videos = append(mv.videos, video)
 	return &dto.VideoResponse{
 		Title: video.Title,
-		// Add other fields as necessary
+		// others if necessary
 	}, nil
 }
 
