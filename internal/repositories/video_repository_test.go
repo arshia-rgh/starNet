@@ -5,7 +5,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"golang_template/internal/database"
-	"golang_template/internal/ent"
 	"golang_template/internal/ent/enttest"
 	"golang_template/internal/services/dto"
 	"reflect"
@@ -210,8 +209,11 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 }
 
 func Test_videoRepository_GetVideoByTitle(t *testing.T) {
-	mockClient := &ent.Client{}
-	mockDB := &MockDatabase{client: mockClient}
+	testClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	mockDB := &MockDatabase{client: testClient}
+
+	// create test videos
+	setUpNewVideo(testClient)
 
 	type fields struct {
 		db database.Database
@@ -224,7 +226,7 @@ func Test_videoRepository_GetVideoByTitle(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *ent.Video
+		want    *dto.VideoResponse
 		wantErr bool
 	}{
 		{
@@ -235,31 +237,51 @@ func Test_videoRepository_GetVideoByTitle(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 				video: dto.Video{
-					Title: "Test Video",
+					Title: "Test Video 1",
 				},
 			},
-			want: &ent.Video{
-				Title:       "Test Video",
-				Description: "Test Description",
-				FilePath:    "/path/to/video",
+			want: &dto.VideoResponse{
+				ID:          1,
+				Title:       "Test Video 1",
+				Description: "Test Description 1",
+				FilePath:    "/path/to/video1",
+				UploadedAt:  time.Now(),
 			},
 			wantErr: false,
 		},
-		// Add more test cases as needed
+		{
+			name:   "get video by title with wrong title",
+			fields: fields{db: mockDB},
+			args: args{
+				ctx: context.Background(),
+				video: dto.Video{
+					Title: "some random wrong title",
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &videoRepository{
 				db: tt.fields.db,
 			}
+
 			got, err := v.GetVideoByTitle(tt.args.ctx, tt.args.video)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetVideoByTitle() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetVideoByTitle() got = %v, want %v", got, tt.want)
+			if tt.want == nil {
+				assert.Equal(t, tt.want, got)
+				return
 			}
+			assert.Equal(t, tt.want.ID, got.ID)
+			assert.Equal(t, tt.want.Title, got.Title)
+			assert.Equal(t, tt.want.Description, got.Description)
+			assert.Equal(t, tt.want.FilePath, got.FilePath)
+			assert.WithinDuration(t, tt.want.UploadedAt, got.UploadedAt, time.Second)
 		})
 	}
 }
