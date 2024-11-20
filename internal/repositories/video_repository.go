@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"golang_template/internal/database"
 	"golang_template/internal/ent"
 	VideoClient "golang_template/internal/ent/video"
@@ -33,6 +34,9 @@ func (v *videoRepository) GetVideoByTitle(ctx context.Context, video dto.Video) 
 
 func (v *videoRepository) CreateVideo(ctx context.Context, video dto.Video) (*ent.Video, error) {
 	videoCreate := v.db.EntClient().Video.Create()
+	if video.Title == "" {
+		return nil, fmt.Errorf("title can not be empty\n")
+	}
 	videoCreate.SetTitle(video.Title)
 	if video.Description != "" {
 		videoCreate.SetDescription(video.Description)

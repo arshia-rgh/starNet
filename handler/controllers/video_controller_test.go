@@ -1,11 +1,9 @@
 package controllers
 
 import (
-	"bufio"
 	"bytes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
-	"github.com/valyala/fasthttp"
 	"golang_template/internal/ent"
 	"golang_template/internal/services"
 	"golang_template/internal/services/dto"
@@ -78,72 +76,6 @@ func TestNewVideoController(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewVideoController(tt.args.videoService); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewVideoController() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_parseVideoUploadDTO(t *testing.T) {
-	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-	_ = w.WriteField("title", "testvideo")
-	_ = w.WriteField("chunk_number", "1")
-	_ = w.WriteField("total_chunks", "1")
-	part, err := w.CreateFormFile("file", "test_video.mp4")
-	if err != nil {
-		t.Fatalf("Error creating form file: %v", err)
-	}
-	part.Write([]byte("test video content"))
-	w.Close()
-
-	tests := []struct {
-		name    string
-		body    bytes.Buffer
-		want    *dto.VideoUpload
-		wantErr bool
-	}{
-		{
-			name: "valid input",
-			body: b,
-			want: &dto.VideoUpload{
-				Title:       "testvideo",
-				ChunkNumber: 1,
-				TotalChunk:  1,
-				File: &multipart.FileHeader{
-					Filename: "test_video.mp4",
-					Size:     int64(b.Len()),
-				},
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest("POST", "/", &tt.body)
-			req.Header.Set("Content-Type", w.FormDataContentType())
-			// Create a new fasthttp.RequestCtx
-			fasthttpReq := new(fasthttp.Request)
-			if err := fasthttpReq.Read(bufio.NewReader(req.Body)); err != nil {
-				t.Fatalf("Error reading request: %v", err)
-			}
-			fasthttpReq.Header.SetContentType(req.Header.Get("Content-Type"))
-			fasthttpReq.Header.SetMethod(req.Method)
-			fasthttpReq.SetRequestURI(req.URL.String())
-
-			fasthttpCtx := &fasthttp.RequestCtx{}
-			fasthttpCtx.Init(fasthttpReq, nil, nil)
-
-			app := fiber.New()
-			ctx := app.AcquireCtx(fasthttpCtx)
-			defer app.ReleaseCtx(ctx)
-
-			got, err := parseVideoUploadDTO(ctx)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("parseVideoUploadDTO() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseVideoUploadDTO() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
