@@ -257,28 +257,75 @@ func Test_videoController_ShowAllVideos(t *testing.T) {
 }
 
 func Test_videoController_UploadVideo(t *testing.T) {
+	var b bytes.Buffer
+	w := multipart.NewWriter(&b)
+	_ = w.WriteField("title", "testvideo")
+	_ = w.WriteField("chunk_number", "1")
+	_ = w.WriteField("total_chunks", "1")
+	part, err := w.CreateFormFile("file", "test_video.mp4")
+	if err != nil {
+		t.Fatalf("Error creating form file: %v", err)
+	}
+	part.Write([]byte("test video content"))
+	w.Close()
+
 	type fields struct {
 		videoService services.VideoService
 	}
-	type args struct {
-		ctx *fiber.Ctx
-	}
+
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name           string
+		fields         fields
+		body           bytes.Buffer
+		forcedLoggedIn bool
+		role           string
+		wantStatus     int
 	}{
-		{},
+		{
+			name:           "upload video successfully",
+			fields:         fields{videoService: &MockVideoService{}},
+			body:           b,
+			forcedLoggedIn: true,
+			role:           "admin",
+			wantStatus:     200,
+		},
+		{
+			name:           "upload video with no admin role and logged in",
+			fields:         fields{videoService: &MockVideoService{}},
+			body:           b,
+			forcedLoggedIn: true,
+			role:           "anything but not admin",
+			wantStatus:     401,
+		},
+		{
+			name:           "upload video with wrong data",
+			fields:         fields{videoService: &MockVideoService{}},
+			body:           bytes.Buffer{},
+			forcedLoggedIn: true,
+			role:           "admin",
+			wantStatus:     400,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &videoController{
 				videoService: tt.fields.videoService,
 			}
-			if err := v.UploadVideo(tt.args.ctx); (err != nil) != tt.wantErr {
-				t.Errorf("UploadVideo() error = %v, wantErr %v", err, tt.wantErr)
+			app := fiber.New()
+			middleware := MockMiddleware{mockAuthMiddleware: MockAuthMiddleware{forceLoggedIn: tt.forcedLoggedIn, role: tt.role}}
+			authMiddleware := middleware.Auth()
+			app.Use(authMiddleware.Handle())
+			app.Post("upload-video", v.UploadVideo)
+
+			req := httptest.NewRequest("POST", "/upload-video", &tt.body)
+			req.Header.Set("Content-Type", w.FormDataContentType())
+
+			res, err := app.Test(req, -1)
+			if err != nil {
+				log.Fatalln(err)
 			}
+			assert.Equal(t, tt.wantStatus, res.StatusCode)
+
 		})
 	}
 }

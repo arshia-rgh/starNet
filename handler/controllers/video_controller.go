@@ -28,6 +28,7 @@ func NewVideoController(videoService services.VideoService) VideoController {
 
 func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
 	role := ctx.Locals("userRole")
+	log.Println(role)
 	if role != "admin" {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "only admins can access"})
 	}
