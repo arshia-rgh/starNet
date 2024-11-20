@@ -6,11 +6,17 @@ import (
 )
 
 type Video struct {
-	ID          int       `json:"id,omitempty"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	FilePath    string `json:"file_path"`
+}
+
+type VideoResponse struct {
+	ID          int       `json:"id"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	FilePath    string    `json:"file_path"`
-	UploadedAt  time.Time `json:"uploaded_at,omitempty"`
+	UploadedAt  time.Time `json:"uploaded_at"`
 }
 
 type VideoUpload struct {

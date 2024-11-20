@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"golang_template/internal/database"
@@ -13,23 +12,6 @@ import (
 	"testing"
 	"time"
 )
-
-type MockDatabase struct {
-	client *ent.Client
-	db     *sql.DB
-}
-
-func (db *MockDatabase) Close() error {
-	return nil
-}
-
-func (db *MockDatabase) EntClient() *ent.Client {
-	return db.client
-}
-
-func (db *MockDatabase) DB() *sql.DB {
-	return db.db
-}
 
 func TestNewVideoRepository(t *testing.T) {
 	type args struct {
@@ -70,7 +52,7 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *ent.Video
+		want    *dto.VideoResponse
 		wantErr bool
 	}{
 		{
@@ -86,7 +68,7 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 					FilePath:    "/path/to/video",
 				},
 			},
-			want: &ent.Video{
+			want: &dto.VideoResponse{
 				ID:          1,
 				Title:       "Test Video",
 				Description: "Test Description",
@@ -148,8 +130,11 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 }
 
 func Test_videoRepository_GetAllVideos(t *testing.T) {
-	mockClient := &ent.Client{}
-	mockDB := &MockDatabase{client: mockClient}
+	testClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	mockDB := &MockDatabase{client: testClient}
+
+	// create test videos
+	setUpNewVideo(testClient)
 
 	type fields struct {
 		db database.Database
@@ -161,7 +146,7 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []*ent.Video
+		want    []*dto.VideoResponse
 		wantErr bool
 	}{
 		{
@@ -172,21 +157,24 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 			},
-			want: []*ent.Video{
+			want: []*dto.VideoResponse{
 				{
+					ID:          1,
 					Title:       "Test Video 1",
 					Description: "Test Description 1",
 					FilePath:    "/path/to/video1",
+					UploadedAt:  time.Now(),
 				},
 				{
+					ID:          2,
 					Title:       "Test Video 2",
 					Description: "Test Description 2",
 					FilePath:    "/path/to/video2",
+					UploadedAt:  time.Now(),
 				},
 			},
 			wantErr: false,
 		},
-		// Add more test cases as needed
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -198,8 +186,12 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 				t.Errorf("GetAllVideos() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetAllVideos() got = %v, want %v", got, tt.want)
+			for i, video := range got {
+				assert.Equal(t, tt.want[i].ID, video.ID)
+				assert.Equal(t, tt.want[i].Title, video.Title)
+				assert.Equal(t, tt.want[i].Description, video.Description)
+				assert.Equal(t, tt.want[i].FilePath, video.FilePath)
+				assert.WithinDuration(t, tt.want[i].UploadedAt, video.UploadedAt, time.Second)
 			}
 		})
 	}
