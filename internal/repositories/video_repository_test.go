@@ -116,14 +116,14 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 				t.Errorf("CreateVideo() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if tt.want != nil {
-				assert.Equal(t, tt.want.ID, got.ID)
-				assert.Equal(t, tt.want.Title, got.Title)
-				assert.Equal(t, tt.want.Description, got.Description)
-				assert.Equal(t, tt.want.FilePath, got.FilePath)
-			} else {
+			if tt.want == nil {
 				assert.Equal(t, tt.want, got)
+				return
 			}
+			assert.Equal(t, tt.want.ID, got.ID)
+			assert.Equal(t, tt.want.Title, got.Title)
+			assert.Equal(t, tt.want.Description, got.Description)
+			assert.Equal(t, tt.want.FilePath, got.FilePath)
 
 		})
 	}
@@ -132,9 +132,6 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 func Test_videoRepository_GetAllVideos(t *testing.T) {
 	testClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	mockDB := &MockDatabase{client: testClient}
-
-	// create test videos
-	setUpNewVideo(testClient)
 
 	type fields struct {
 		db database.Database
@@ -175,15 +172,30 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:    "get all videos with no videos found",
+			fields:  fields{db: mockDB},
+			args:    args{ctx: context.Background()},
+			want:    nil,
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			v := &videoRepository{
 				db: tt.fields.db,
 			}
+			if tt.name == "get_all_videos_successfully" {
+				// create test videos
+				setUpNewVideo(testClient)
+			}
 			got, err := v.GetAllVideos(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAllVideos() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.want == nil {
+				assert.Equal(t, tt.want, got)
 				return
 			}
 			for i, video := range got {
