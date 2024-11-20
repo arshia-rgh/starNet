@@ -159,19 +159,28 @@ func Test_videoController_PlayVideo(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		fields     fields
-		wantStatus int
+		name           string
+		fields         fields
+		forcedLoggedIn bool
+		wantStatus     int
 	}{
 		{
-			name:       "play video successfully",
-			fields:     fields{videoService: &MockVideoService{videos: []dto.Video{testVideo}}},
-			wantStatus: 200,
+			name:           "play video successfully",
+			fields:         fields{videoService: &MockVideoService{videos: []dto.Video{testVideo}}},
+			forcedLoggedIn: true,
+			wantStatus:     200,
 		},
 		{
-			name:       "play video with no video found",
-			fields:     fields{videoService: &MockVideoService{}},
-			wantStatus: 404,
+			name:           "play video with no video found",
+			fields:         fields{videoService: &MockVideoService{}},
+			forcedLoggedIn: true,
+			wantStatus:     404,
+		},
+		{
+			name:           "play video with not logged in",
+			fields:         fields{videoService: &MockVideoService{}},
+			forcedLoggedIn: false,
+			wantStatus:     401,
 		},
 	}
 	for _, tt := range tests {
@@ -180,6 +189,9 @@ func Test_videoController_PlayVideo(t *testing.T) {
 			v := &videoController{
 				videoService: tt.fields.videoService,
 			}
+			middleware := MockMiddleware{mockAuthMiddleware: MockAuthMiddleware{forceLoggedIn: tt.forcedLoggedIn}}
+			authMiddleware := middleware.Auth()
+			app.Use(authMiddleware.Handle())
 			app.Get("/videos/:title/play", v.PlayVideo)
 
 			req := httptest.NewRequest("GET", "/videos/test/play", nil)

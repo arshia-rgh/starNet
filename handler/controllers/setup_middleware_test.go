@@ -13,11 +13,10 @@ type MockAuthMiddleware struct {
 }
 
 func (ma *MockAuthMiddleware) Handle() fiber.Handler {
-	if ma.forceLoggedIn {
-		return func(ctx *fiber.Ctx) error {
+	return func(ctx *fiber.Ctx) error {
+		if ma.forceLoggedIn {
 			return ctx.Next()
 		}
-	} else {
-		return nil
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "unauthorized"})
 	}
 }
