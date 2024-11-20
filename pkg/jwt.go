@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"errors"
+	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 )
@@ -9,6 +10,9 @@ import (
 var ErrInvalidToken = errors.New("invalid token")
 
 func GenerateToken(userID int, userRole string, secretKey string) (string, error) {
+	if secretKey == "" {
+		return "", fmt.Errorf("secret key can not be empty")
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"role": userRole,
 		"sub":  userID,
