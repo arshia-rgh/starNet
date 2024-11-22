@@ -25,9 +25,6 @@ type DatabaseConfig struct {
 	User     string `mapstructure:"user" validate:"required"`
 	Password string `mapstructure:"password" validate:"required"`
 	DBName   string `mapstructure:"dbname" validate:"required"`
-	SSLMode  string `mapstructure:"sslmode" validate:"required,oneof=disable enable verify-full"`
-	MaxConns int    `mapstructure:"max_conns" validate:"required,min=1"`
-	MinConns int    `mapstructure:"min_conns" validate:"required,min=1"`
 }
 
 // RedisConfig holds all redis related configuration

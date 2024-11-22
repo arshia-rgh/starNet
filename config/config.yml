@@ -7,13 +7,10 @@ server:
 
 db:
   host: "localhost"
-  port: "5432"
-  user: "postgres"
+  port: "8529"
+  user: "root"
   password: "Arshio12*"
   dbname: "starnet"
-  sslmode: "disable"
-  max_conns: 20
-  min_conns: 1
 
 redis:
   host: "localhost"
