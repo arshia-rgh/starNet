@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/arangodb/go-driver/v2/arangodb"
+	"github.com/arangodb/go-driver/v2/arangodb/shared"
 	"golang_template/internal/database"
-	"golang_template/internal/ent"
-	"golang_template/internal/ent/user"
 	"golang_template/internal/services/dto"
 	"log"
 )
+
+const collectionName = "users"
 
 var (
 	ErrUserNotFound    = errors.New("user not found")
@@ -19,8 +21,8 @@ var (
 )
 
 type UserRepository interface {
-	Get(ctx context.Context, userDto dto.User) (*ent.User, error)
-	CreateUser(ctx context.Context, userData dto.User) (*ent.User, error)
+	Get(ctx context.Context, userDto dto.User) (*dto.User, error)
+	CreateUser(ctx context.Context, userData dto.User) (*dto.User, error)
 }
 
 type userRepository struct {
@@ -39,36 +41,49 @@ func NewUserRepository(db database.Database) UserRepository {
 	}
 }
 
-func (r userRepository) Get(ctx context.Context, userDto dto.User) (*ent.User, error) {
-	userData, err := r.db.EntClient().User.
-		Query().
-		Where(user.UsernameEQ(userDto.Username)).
-		First(ctx)
-
-	if ent.IsNotFound(err) {
-		return nil, ErrUserNotFound
+func (r *userRepository) Get(ctx context.Context, userDto dto.User) (*dto.User, error) {
+	query := fmt.Sprintf("FOR u IN %V FILTER u.username == @username RETURN u", collectionName)
+	bindVars := map[string]interface{}{
+		"username": userDto.Username,
 	}
+
+	cursor, err := r.db.DB().Query(ctx, query, &arangodb.QueryOptions{
+		BindVars: bindVars,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("querying user: %w", err)
 	}
+	defer cursor.Close()
 
-	return userData, nil
+	var user dto.User
+	for {
+		meta, err := cursor.ReadDocument(ctx, &user)
+		if shared.IsNoMoreDocuments(err) {
+			break
+		} else if err != nil {
+			return nil, fmt.Errorf("reading user document: %w", err)
+		}
+		log.Printf("Got document with key '%s' from query\n", meta.Key)
+	}
+
+	if user.Username == "" {
+		return nil, ErrUserNotFound
+	}
+
+	return &user, nil
 }
 
-func (r userRepository) CreateUser(ctx context.Context, userData dto.User) (*ent.User, error) {
+func (r *userRepository) CreateUser(ctx context.Context, userData dto.User) (*dto.User, error) {
+	col, err := r.db.DB().Collection(ctx, collectionName)
+	if err != nil {
+		return nil, fmt.Errorf("opening collection: %w", err)
+	}
 
-	// Create new user
-	user, err := r.db.EntClient().User.
-		Create().
-		SetUsername(userData.Username).
-		SetPassword(userData.Password).
-		Save(ctx)
-
-	log.Println(err)
-
+	meta, err := col.CreateDocument(ctx, userData)
 	if err != nil {
 		return nil, fmt.Errorf("creating user: %w", err)
 	}
+	log.Printf("Created document with key '%s'\n", meta.Key)
 
-	return user, nil
+	return &userData, nil
 }
