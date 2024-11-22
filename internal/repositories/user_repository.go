@@ -11,7 +11,7 @@ import (
 	"log"
 )
 
-const collectionName = "users"
+const collectionNameUser = "users"
 
 var (
 	ErrUserNotFound    = errors.New("user not found")
@@ -42,7 +42,7 @@ func NewUserRepository(db database.Database) UserRepository {
 }
 
 func (r *userRepository) Get(ctx context.Context, userDto dto.User) (*dto.User, error) {
-	query := fmt.Sprintf("FOR u IN %V FILTER u.username == @username RETURN u", collectionName)
+	query := fmt.Sprintf("FOR u IN %V FILTER u.username == @username RETURN u", collectionNameUser)
 	bindVars := map[string]interface{}{
 		"username": userDto.Username,
 	}
@@ -74,7 +74,7 @@ func (r *userRepository) Get(ctx context.Context, userDto dto.User) (*dto.User, 
 }
 
 func (r *userRepository) CreateUser(ctx context.Context, userData dto.User) (*dto.User, error) {
-	col, err := r.db.DB().Collection(ctx, collectionName)
+	col, err := r.db.DB().Collection(ctx, collectionNameUser)
 	if err != nil {
 		return nil, fmt.Errorf("opening collection: %w", err)
 	}
@@ -84,6 +84,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userData dto.User) (*dt
 		return nil, fmt.Errorf("creating user: %w", err)
 	}
 	log.Printf("Created document with key '%s'\n", meta.Key)
+	userData.Key = meta.Key
 
 	return &userData, nil
 }
