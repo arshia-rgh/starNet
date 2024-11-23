@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/arangodb/go-driver/v2/arangodb/shared"
 	"github.com/gofiber/fiber/v2"
-	"golang_template/internal/ent"
 	"golang_template/internal/services"
 	"golang_template/internal/services/dto"
 	"golang_template/pkg"
@@ -34,7 +33,7 @@ func (c *userController) Login(ctx *fiber.Ctx) error {
 	token, err := c.userService.Login(ctx, user)
 	if err != nil {
 		log.Println(err)
-		if ent.IsNotFound(err) {
+		if shared.IsNotFound(err) {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "user with this username and password doesnt exist"})
 		}
 		if errors.Is(err, pkg.ErrInvalidToken) {
@@ -52,7 +51,7 @@ func (c *userController) Register(ctx *fiber.Ctx) error {
 	}
 	dbUser, err := c.userService.Register(ctx, user)
 	if err != nil {
-		if shared.IsArangoErrorWithCode(err, 1210) {
+		if shared.IsArangoErrorWithCode(err, 409) {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "user with this username already exists"})
 		}
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to create new user"})

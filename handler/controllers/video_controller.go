@@ -76,7 +76,7 @@ func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
 		dbVideo, err := v.videoService.CreateVideo(ctx, video)
 		if err != nil {
 			log.Println(err)
-			if shared.IsArangoErrorWithCode(err, 1210) {
+			if shared.IsArangoErrorWithCode(err, 409) {
 				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "video with this title already exists"})
 			}
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})
@@ -111,9 +111,11 @@ func parseVideoUploadDTO(ctx *fiber.Ctx) (*dto.VideoUpload, error) {
 	}, nil
 }
 
+// unreleased version of fiber
+
 //func parseVideoUploadDTO(ctx *fiber.Ctx) (*dto.VideoUpload, error) {
 //	var video dto.VideoUpload
-//	if err := ctx.Bind(); err != nil {
+//	if err := ctx.Bind().Form(&video); err != nil {
 //		log.Println(err)
 //		return nil, err
 //	}
