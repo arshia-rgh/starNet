@@ -74,6 +74,46 @@ func (r *userRepository) Get(ctx context.Context, userDto dto.User) (*dto.User, 
 }
 
 func (r *userRepository) CreateUser(ctx context.Context, userData dto.User) (*dto.User, error) {
+	exists, err := r.db.DB().CollectionExists(ctx, collectionNameUser)
+	if err != nil {
+		return nil, fmt.Errorf("failed checking collection existense, %w", err)
+	}
+	if !exists {
+		// Computed values for role field be auto being set to the normal
+		computedValues := []arangodb.ComputedValue{
+			{
+				Name:       "role",
+				Expression: "RETURN 'normal'",
+				Overwrite:  true,
+				ComputeOn:  []arangodb.ComputeOn{"insert"},
+			},
+		}
+
+		properties := arangodb.CreateCollectionProperties{
+			Schema:         nil,
+			ComputedValues: computedValues,
+		}
+
+		if _, err = r.db.DB().CreateCollection(ctx, collectionNameUser, &properties); err != nil {
+			return nil, fmt.Errorf("creating collection: %w", err)
+		}
+
+		// Unique index on username
+		coll, err := r.db.DB().Collection(ctx, collectionNameUser)
+		if err != nil {
+			return nil, fmt.Errorf("opening collection: %w", err)
+		}
+		unique := true
+		sparse := true
+
+		if _, _, err := coll.EnsurePersistentIndex(ctx, []string{"username"}, &arangodb.CreatePersistentIndexOptions{
+			Sparse: &sparse,
+			Unique: &unique,
+		}); err != nil {
+			return nil, fmt.Errorf("creating index on username: %w", err)
+		}
+
+	}
 	col, err := r.db.DB().Collection(ctx, collectionNameUser)
 	if err != nil {
 		return nil, fmt.Errorf("opening collection: %w", err)

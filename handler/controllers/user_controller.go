@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"github.com/arangodb/go-driver/v2/arangodb/shared"
 	"github.com/gofiber/fiber/v2"
 	"golang_template/internal/ent"
 	"golang_template/internal/services"
@@ -51,6 +52,9 @@ func (c *userController) Register(ctx *fiber.Ctx) error {
 	}
 	dbUser, err := c.userService.Register(ctx, user)
 	if err != nil {
+		if shared.IsArangoErrorWithCode(err, 1210) {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "user with this username already exists"})
+		}
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to create new user"})
 	}
 	return ctx.Status(fiber.StatusCreated).JSON(dbUser)
