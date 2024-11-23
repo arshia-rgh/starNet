@@ -48,6 +48,7 @@ func (s *userService) Login(ctx *fiber.Ctx, user dto.User) (string, error) {
 func (s *userService) Register(ctx *fiber.Ctx, user dto.User) (*dto.User, error) {
 	hashedPass, _ := pkg.HashPassword(user.Password)
 	user.Password = hashedPass
+	user.Role = "normal"
 	return s.repo.CreateUser(ctx.Context(), user)
 
 }

@@ -85,6 +85,7 @@ func (r *userRepository) CreateUser(ctx context.Context, userData dto.User) (*dt
 	}
 	log.Printf("Created document with key '%s'\n", meta.Key)
 	userData.Key = meta.Key
+	userData.ID = string(meta.ID)
 
 	return &userData, nil
 }
