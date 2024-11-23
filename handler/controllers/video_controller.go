@@ -131,8 +131,13 @@ func (v *videoController) ShowAllVideos(ctx *fiber.Ctx) error {
 }
 
 func (v *videoController) PlayVideo(ctx *fiber.Ctx) error {
-	title := ctx.Params("title")
-	video := dto.Video{Title: title}
+	var params dto.VideoParams
+	err := ctx.ParamsParser(&params)
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "wrong params format"})
+	}
+
+	video := dto.Video{Title: params.Title}
 	dbVideo, err := v.videoService.GetVideoByTitle(ctx, video)
 	if err != nil {
 		if ent.IsNotFound(err) {

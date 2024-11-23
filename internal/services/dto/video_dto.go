@@ -21,3 +21,7 @@ type VideoUpload struct {
 	TotalChunk  int                   `json:"total_chunk" form:"total_chunk"`
 	File        *multipart.FileHeader `json:"file" form:"file"`
 }
+
+type VideoParams struct {
+	Title string `params:"title"`
+}
