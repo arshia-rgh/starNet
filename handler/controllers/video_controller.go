@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/arangodb/go-driver/v2/arangodb/shared"
 	"github.com/gofiber/fiber/v2"
 	"golang_template/internal/ent"
 	"golang_template/internal/services"
@@ -74,7 +75,8 @@ func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
 
 		dbVideo, err := v.videoService.CreateVideo(ctx, video)
 		if err != nil {
-			if ent.IsConstraintError(err) {
+			log.Println(err)
+			if shared.IsArangoErrorWithCode(err, 1210) {
 				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "video with this title already exists"})
 			}
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "server error"})

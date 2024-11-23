@@ -8,7 +8,6 @@ import (
 	"golang_template/internal/database"
 	"golang_template/internal/services/dto"
 	"log"
-	"time"
 )
 
 const collectionNameVideo = "videos"
@@ -79,12 +78,57 @@ func (v *videoRepository) GetVideoByTitle(ctx context.Context, video dto.Video) 
 }
 
 func (v *videoRepository) CreateVideo(ctx context.Context, video dto.Video) (*dto.Video, error) {
+	exists, err := v.db.DB().CollectionExists(ctx, collectionNameVideo)
+	if err != nil {
+		return nil, fmt.Errorf("failed checking collection existense, %w", err)
+	}
+	if !exists {
+		// Computed values for uploaded_at field be auto
+		computedValues := []arangodb.ComputedValue{
+			{
+				Name:       "uploaded_at",
+				Expression: "RETURN DATE_NOW()",
+				Overwrite:  true,
+				ComputeOn:  []arangodb.ComputeOn{"insert"},
+			},
+		}
+
+		properties := arangodb.CreateCollectionProperties{
+			Schema:         nil,
+			ComputedValues: computedValues,
+		}
+
+		if _, err = v.db.DB().CreateCollection(ctx, collectionNameVideo, &properties); err != nil {
+			return nil, fmt.Errorf("creating collection: %w", err)
+		}
+
+		// Unique indexes on title and file_path
+		coll, err := v.db.DB().Collection(ctx, collectionNameVideo)
+		if err != nil {
+			return nil, fmt.Errorf("opening collection: %w", err)
+		}
+		unique := true
+		sparse := true
+
+		if _, _, err := coll.EnsurePersistentIndex(ctx, []string{"title"}, &arangodb.CreatePersistentIndexOptions{
+			Sparse: &sparse,
+			Unique: &unique,
+		}); err != nil {
+			return nil, fmt.Errorf("creating index on title: %w", err)
+		}
+
+		if _, _, err := coll.EnsurePersistentIndex(ctx, []string{"file_path"}, &arangodb.CreatePersistentIndexOptions{
+			Sparse: &sparse,
+			Unique: &unique,
+		}); err != nil {
+			return nil, fmt.Errorf("creating index on file_path: %w", err)
+		}
+	}
+
 	coll, err := v.db.DB().Collection(ctx, collectionNameVideo)
 	if err != nil {
 		return nil, fmt.Errorf("opening collection: %w", err)
 	}
-
-	video.UploadedAt = time.Now()
 
 	meta, err := coll.CreateDocument(ctx, video)
 	if err != nil {
