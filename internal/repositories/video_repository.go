@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const collectionNameVideo = "vidoes"
+const collectionNameVideo = "videos"
 
 type VideoRepository interface {
 	GetAllVideos(ctx context.Context) ([]*dto.Video, error)

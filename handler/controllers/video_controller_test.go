@@ -18,19 +18,19 @@ type MockVideoService struct {
 	videos []dto.Video
 }
 
-func (m *MockVideoService) CreateVideo(ctx *fiber.Ctx, video dto.Video) (*dto.VideoResponse, error) {
+func (m *MockVideoService) CreateVideo(ctx *fiber.Ctx, video dto.Video) (*dto.Video, error) {
 	m.videos = append(m.videos, video)
 
-	return &dto.VideoResponse{
+	return &dto.Video{
 		Title:       video.Title,
 		Description: video.Description,
 		FilePath:    video.Description,
 	}, nil
 }
-func (m *MockVideoService) GetAllVideos(ctx *fiber.Ctx) ([]*dto.VideoResponse, error) {
-	var v []*dto.VideoResponse
+func (m *MockVideoService) GetAllVideos(ctx *fiber.Ctx) ([]*dto.Video, error) {
+	var v []*dto.Video
 	for _, video := range m.videos {
-		entVideo := &dto.VideoResponse{
+		entVideo := &dto.Video{
 			Title:       video.Title,
 			Description: video.Description,
 			FilePath:    video.FilePath,
@@ -42,10 +42,10 @@ func (m *MockVideoService) GetAllVideos(ctx *fiber.Ctx) ([]*dto.VideoResponse, e
 	}
 	return v, nil
 }
-func (m *MockVideoService) GetVideoByTitle(ctx *fiber.Ctx, video dto.Video) (*dto.VideoResponse, error) {
+func (m *MockVideoService) GetVideoByTitle(ctx *fiber.Ctx, video dto.Video) (*dto.Video, error) {
 	for _, v := range m.videos {
 		if v.Title == video.Title {
-			return &dto.VideoResponse{
+			return &dto.Video{
 				Title:       v.Title,
 				Description: v.Description,
 				FilePath:    v.FilePath,

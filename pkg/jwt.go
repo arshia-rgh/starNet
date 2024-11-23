@@ -9,7 +9,7 @@ import (
 
 var ErrInvalidToken = errors.New("invalid token")
 
-func GenerateToken(userID int, userRole string, secretKey string) (string, error) {
+func GenerateToken(userID string, userRole string, secretKey string) (string, error) {
 	if secretKey == "" {
 		return "", fmt.Errorf("secret key can not be empty")
 	}
@@ -22,7 +22,7 @@ func GenerateToken(userID int, userRole string, secretKey string) (string, error
 	return token.SignedString([]byte(secretKey))
 }
 
-func VerifyToken(token string, secretKey string) (int, string, error) {
+func VerifyToken(token string, secretKey string) (string, string, error) {
 	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (any, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
@@ -31,20 +31,20 @@ func VerifyToken(token string, secretKey string) (int, string, error) {
 		return []byte(secretKey), nil
 	})
 	if err != nil {
-		return 0, "", err
+		return "", "", err
 	}
 
 	tokenIsValid := parsedToken.Valid
 	if !tokenIsValid {
-		return 0, "", ErrInvalidToken
+		return "", "", ErrInvalidToken
 	}
 
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok {
-		return 0, "", errors.New("invalid claims")
+		return "", "", errors.New("invalid claims")
 	}
 
-	userID := int(claims["sub"].(float64))
+	userID := claims["sub"].(string)
 	userRole := claims["role"].(string)
 	return userID, userRole, nil
 }

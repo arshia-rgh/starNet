@@ -30,9 +30,10 @@ func NewDatabase(ctx context.Context, dbConfig *config.DatabaseConfig) (Database
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	conn := connection.NewHttp2Connection(connection.Http2Configuration{
-		Endpoint: connection.NewRoundRobinEndpoints([]string{fmt.Sprintf("http://%v:%v", dbConfig.Host, dbConfig.Port)}),
-	})
+	conn := connection.NewHttp2Connection(connection.DefaultHTTP2ConfigurationWrapper(
+		connection.NewRoundRobinEndpoints([]string{fmt.Sprintf("http://%v:%v", dbConfig.Host, dbConfig.Port)}),
+		true,
+	))
 
 	auth := connection.NewBasicAuth(dbConfig.User, dbConfig.Password)
 	err := conn.SetAuthentication(auth)

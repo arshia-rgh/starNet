@@ -6,6 +6,7 @@ import (
 )
 
 type Video struct {
+	ID          string    `json:"_id,omitempty"`
 	Key         string    `json:"_key,omitempty"`
 	Title       string    `json:"title"`
 	Description string    `json:"description,omitempty"`

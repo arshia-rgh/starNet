@@ -41,7 +41,6 @@ func GetDSN(cfg *DatabaseConfig) string {
 		cfg.User,
 		cfg.Password,
 		cfg.DBName,
-		cfg.SSLMode,
 	)
 }
 

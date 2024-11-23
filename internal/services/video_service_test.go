@@ -14,10 +14,10 @@ type MockVideoRepository struct {
 	videos []dto.Video
 }
 
-func (mv *MockVideoRepository) GetAllVideos(ctx context.Context) ([]*dto.VideoResponse, error) {
-	var videoResponses []*dto.VideoResponse
+func (mv *MockVideoRepository) GetAllVideos(ctx context.Context) ([]*dto.Video, error) {
+	var videoResponses []*dto.Video
 	for _, video := range mv.videos {
-		videoResponses = append(videoResponses, &dto.VideoResponse{
+		videoResponses = append(videoResponses, &dto.Video{
 			Title: video.Title,
 			// others if necessary
 		})
@@ -25,10 +25,10 @@ func (mv *MockVideoRepository) GetAllVideos(ctx context.Context) ([]*dto.VideoRe
 	return videoResponses, nil
 }
 
-func (mv *MockVideoRepository) GetVideoByTitle(ctx context.Context, video dto.Video) (*dto.VideoResponse, error) {
+func (mv *MockVideoRepository) GetVideoByTitle(ctx context.Context, video dto.Video) (*dto.Video, error) {
 	for _, v := range mv.videos {
 		if v.Title == video.Title {
-			return &dto.VideoResponse{
+			return &dto.Video{
 				Title: v.Title,
 				// others if necessary
 			}, nil
@@ -37,12 +37,12 @@ func (mv *MockVideoRepository) GetVideoByTitle(ctx context.Context, video dto.Vi
 	return nil, fmt.Errorf("video not found")
 }
 
-func (mv *MockVideoRepository) CreateVideo(ctx context.Context, video dto.Video) (*dto.VideoResponse, error) {
+func (mv *MockVideoRepository) CreateVideo(ctx context.Context, video dto.Video) (*dto.Video, error) {
 	if video.Title == "" {
 		return nil, fmt.Errorf("invalid video title")
 	}
 	mv.videos = append(mv.videos, video)
-	return &dto.VideoResponse{
+	return &dto.Video{
 		Title: video.Title,
 		// others if necessary
 	}, nil
@@ -84,7 +84,7 @@ func Test_videoService_CreateVideo(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *dto.VideoResponse
+		want    *dto.Video
 		wantErr bool
 	}{
 		{
@@ -96,7 +96,7 @@ func Test_videoService_CreateVideo(t *testing.T) {
 				ctx:   &fiber.Ctx{},
 				video: dto.Video{Title: "Test Video"},
 			},
-			want:    &dto.VideoResponse{Title: "Test Video"},
+			want:    &dto.Video{Title: "Test Video"},
 			wantErr: false,
 		},
 		{
@@ -143,7 +143,7 @@ func Test_videoService_GetAllVideos(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []*dto.VideoResponse
+		want    []*dto.Video
 		wantErr bool
 	}{
 		{
@@ -154,7 +154,7 @@ func Test_videoService_GetAllVideos(t *testing.T) {
 			args: args{
 				ctx: &fiber.Ctx{},
 			},
-			want:    []*dto.VideoResponse{{Title: "Test Video"}},
+			want:    []*dto.Video{{Title: "Test Video"}},
 			wantErr: false,
 		},
 	}
@@ -191,7 +191,7 @@ func Test_videoService_GetVideoByTitle(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *dto.VideoResponse
+		want    *dto.Video
 		wantErr bool
 	}{
 		{
@@ -203,7 +203,7 @@ func Test_videoService_GetVideoByTitle(t *testing.T) {
 				ctx:   &fiber.Ctx{},
 				video: dto.Video{Title: "Test Video"},
 			},
-			want:    &dto.VideoResponse{Title: "Test Video"},
+			want:    &dto.Video{Title: "Test Video"},
 			wantErr: false,
 		},
 		{

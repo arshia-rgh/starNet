@@ -42,7 +42,7 @@ func NewUserRepository(db database.Database) UserRepository {
 }
 
 func (r *userRepository) Get(ctx context.Context, userDto dto.User) (*dto.User, error) {
-	query := fmt.Sprintf("FOR u IN %V FILTER u.username == @username RETURN u", collectionNameUser)
+	query := fmt.Sprintf("FOR u IN %v FILTER u.username == @username RETURN u", collectionNameUser)
 	bindVars := map[string]interface{}{
 		"username": userDto.Username,
 	}

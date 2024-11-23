@@ -5,7 +5,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 	"golang_template/internal/database"
-	"golang_template/internal/ent/enttest"
 	"golang_template/internal/services/dto"
 	"reflect"
 	"testing"
@@ -13,6 +12,7 @@ import (
 )
 
 func TestNewVideoRepository(t *testing.T) {
+	db := setupTestVideoDatabase()
 	type args struct {
 		db database.Database
 	}
@@ -23,8 +23,8 @@ func TestNewVideoRepository(t *testing.T) {
 	}{
 		{
 			name: "test new repository creation",
-			args: args{db: &MockDatabase{}},
-			want: &videoRepository{db: &MockDatabase{}},
+			args: args{db: db},
+			want: &videoRepository{db: db},
 		},
 	}
 	for _, tt := range tests {
@@ -37,8 +37,8 @@ func TestNewVideoRepository(t *testing.T) {
 }
 
 func Test_videoRepository_CreateVideo(t *testing.T) {
-	testClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	mockDB := &MockDatabase{client: testClient}
+	db := setupTestVideoDatabase()
+	defer tearDown(db, "videos")
 
 	type fields struct {
 		db database.Database
@@ -51,13 +51,13 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *dto.VideoResponse
+		want    *dto.Video
 		wantErr bool
 	}{
 		{
 			name: "create video successfully",
 			fields: fields{
-				db: mockDB,
+				db: db,
 			},
 			args: args{
 				ctx: context.Background(),
@@ -67,8 +67,7 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 					FilePath:    "/path/to/video",
 				},
 			},
-			want: &dto.VideoResponse{
-				ID:          1,
+			want: &dto.Video{
 				Title:       "Test Video",
 				Description: "Test Description",
 				FilePath:    "/path/to/video",
@@ -78,7 +77,7 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 		},
 		{
 			name:   "create video with no title (required)",
-			fields: fields{db: mockDB},
+			fields: fields{db: db},
 			args: args{
 				ctx: context.Background(),
 				video: dto.Video{
@@ -92,7 +91,7 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 		},
 		{
 			name:   "create video with duplicated title",
-			fields: fields{db: mockDB},
+			fields: fields{db: db},
 			args: args{
 				ctx: context.Background(),
 				video: dto.Video{
@@ -119,7 +118,6 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 				assert.Equal(t, tt.want, got)
 				return
 			}
-			assert.Equal(t, tt.want.ID, got.ID)
 			assert.Equal(t, tt.want.Title, got.Title)
 			assert.Equal(t, tt.want.Description, got.Description)
 			assert.Equal(t, tt.want.FilePath, got.FilePath)
@@ -129,8 +127,8 @@ func Test_videoRepository_CreateVideo(t *testing.T) {
 }
 
 func Test_videoRepository_GetAllVideos(t *testing.T) {
-	testClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	mockDB := &MockDatabase{client: testClient}
+	mockDB := setupTestVideoDatabase()
+	defer tearDown(mockDB, "videos")
 
 	type fields struct {
 		db database.Database
@@ -142,7 +140,7 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    []*dto.VideoResponse
+		want    []*dto.Video
 		wantErr bool
 	}{
 		{
@@ -153,16 +151,14 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 			args: args{
 				ctx: context.Background(),
 			},
-			want: []*dto.VideoResponse{
+			want: []*dto.Video{
 				{
-					ID:          1,
 					Title:       "Test Video 1",
 					Description: "Test Description 1",
 					FilePath:    "/path/to/video1",
 					UploadedAt:  time.Now(),
 				},
 				{
-					ID:          2,
 					Title:       "Test Video 2",
 					Description: "Test Description 2",
 					FilePath:    "/path/to/video2",
@@ -186,7 +182,7 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 			}
 			if tt.name == "get_all_videos_successfully" {
 				// create test videos
-				setUpNewVideo(testClient)
+				setUpNewVideo(mockDB.DB())
 			}
 			got, err := v.GetAllVideos(tt.args.ctx)
 			if (err != nil) != tt.wantErr {
@@ -198,7 +194,6 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 				return
 			}
 			for i, video := range got {
-				assert.Equal(t, tt.want[i].ID, video.ID)
 				assert.Equal(t, tt.want[i].Title, video.Title)
 				assert.Equal(t, tt.want[i].Description, video.Description)
 				assert.Equal(t, tt.want[i].FilePath, video.FilePath)
@@ -209,11 +204,10 @@ func Test_videoRepository_GetAllVideos(t *testing.T) {
 }
 
 func Test_videoRepository_GetVideoByTitle(t *testing.T) {
-	testClient := enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	mockDB := &MockDatabase{client: testClient}
-
+	mockDB := setupTestVideoDatabase()
+	defer tearDown(mockDB, "videos")
 	// create test videos
-	setUpNewVideo(testClient)
+	setUpNewVideo(mockDB.DB())
 
 	type fields struct {
 		db database.Database
@@ -226,7 +220,7 @@ func Test_videoRepository_GetVideoByTitle(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *dto.VideoResponse
+		want    *dto.Video
 		wantErr bool
 	}{
 		{
@@ -240,8 +234,7 @@ func Test_videoRepository_GetVideoByTitle(t *testing.T) {
 					Title: "Test Video 1",
 				},
 			},
-			want: &dto.VideoResponse{
-				ID:          1,
+			want: &dto.Video{
 				Title:       "Test Video 1",
 				Description: "Test Description 1",
 				FilePath:    "/path/to/video1",
@@ -277,7 +270,6 @@ func Test_videoRepository_GetVideoByTitle(t *testing.T) {
 				assert.Equal(t, tt.want, got)
 				return
 			}
-			assert.Equal(t, tt.want.ID, got.ID)
 			assert.Equal(t, tt.want.Title, got.Title)
 			assert.Equal(t, tt.want.Description, got.Description)
 			assert.Equal(t, tt.want.FilePath, got.FilePath)
