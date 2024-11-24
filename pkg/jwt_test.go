@@ -6,7 +6,7 @@ import (
 
 func TestGenerateToken(t *testing.T) {
 	type args struct {
-		userID    int
+		userID    string
 		userRole  string
 		secretKey string
 	}
@@ -18,7 +18,7 @@ func TestGenerateToken(t *testing.T) {
 		{
 			name: "Valid token generation",
 			args: args{
-				userID:    1,
+				userID:    "1",
 				userRole:  "admin",
 				secretKey: "secret",
 			},
@@ -27,7 +27,7 @@ func TestGenerateToken(t *testing.T) {
 		{
 			name: "Empty secret key",
 			args: args{
-				userID:    1,
+				userID:    "1",
 				userRole:  "admin",
 				secretKey: "",
 			},
@@ -56,17 +56,17 @@ func TestVerifyToken(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    int
+		want    string
 		want1   string
 		wantErr bool
 	}{
 		{
 			name: "Valid token verification",
 			args: args{
-				token:     func() string { token, _ := GenerateToken(1, "admin", "secret"); return token }(),
+				token:     func() string { token, _ := GenerateToken("1", "admin", "secret"); return token }(),
 				secretKey: "secret",
 			},
-			want:    1,
+			want:    "1",
 			want1:   "admin",
 			wantErr: false,
 		},
@@ -76,17 +76,17 @@ func TestVerifyToken(t *testing.T) {
 				token:     "invalid.token.here",
 				secretKey: "secret",
 			},
-			want:    0,
+			want:    "",
 			want1:   "",
 			wantErr: true,
 		},
 		{
 			name: "Invalid secret key",
 			args: args{
-				token:     func() string { token, _ := GenerateToken(1, "admin", "secret"); return token }(),
+				token:     func() string { token, _ := GenerateToken("1", "admin", "secret"); return token }(),
 				secretKey: "wrongsecret",
 			},
-			want:    0,
+			want:    "",
 			want1:   "",
 			wantErr: true,
 		},

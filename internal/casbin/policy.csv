@@ -1,0 +1,6 @@
+p, admin, /api/protected/upload-video, POST
+p, admin, /api/protected/videos/*/play, GET
+p, normal, /api/protected/videos/*/play, GET
+
+g, admin, admin
+g, normal, normal
