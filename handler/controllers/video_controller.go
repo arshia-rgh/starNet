@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"github.com/arangodb/go-driver/v2/arangodb/shared"
-	"github.com/gofiber/fiber/v2"
 	"golang_template/internal/ent"
 	"golang_template/internal/services"
 	"golang_template/internal/services/dto"
@@ -11,6 +9,9 @@ import (
 	"os"
 	filepath2 "path/filepath"
 	"strconv"
+
+	"github.com/arangodb/go-driver/v2/arangodb/shared"
+	"github.com/gofiber/fiber/v2"
 )
 
 type VideoController interface {
@@ -27,13 +28,8 @@ func NewVideoController(videoService services.VideoService) VideoController {
 	return &videoController{videoService: videoService}
 }
 
+// UploadVideo is only accessible by admins
 func (v *videoController) UploadVideo(ctx *fiber.Ctx) error {
-	role := ctx.Locals("userRole")
-	log.Println(role)
-	if role != "admin" {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "only admins can access"})
-	}
-
 	uploadDTO, err := parseVideoUploadDTO(ctx)
 	if err != nil {
 		log.Println(err)

@@ -1,10 +1,11 @@
 package app
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"golang_template/handler/controllers"
 	"golang_template/handler/middlewares"
 	"golang_template/handler/routers"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func (a *application) InitRouter(app *fiber.App, controller controllers.Controllers) routers.Router {
@@ -23,7 +24,7 @@ func (a *application) InitRouter(app *fiber.App, controller controllers.Controll
 
 func setupProtectedRoutes(group fiber.Router, middleware middlewares.Middleware) fiber.Router {
 	group.Use(middleware.Auth().Handle())
-
+	group.Use(middleware.Authorization().Handle())
 	return group
 }
 
