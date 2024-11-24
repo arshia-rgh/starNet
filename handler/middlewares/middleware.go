@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"golang_template/internal/casbin"
 	"golang_template/internal/config"
 	"log"
 )
@@ -10,10 +11,12 @@ import (
 
 type Middleware interface {
 	Auth() AuthMiddleware
+	Authorization() AuthorizationMiddleware
 }
 
 type middleware struct {
-	authMiddleware AuthMiddleware
+	authMiddleware          AuthMiddleware
+	authorizationMiddleware AuthorizationMiddleware
 }
 
 func NewMiddleware() Middleware {
@@ -21,8 +24,16 @@ func NewMiddleware() Middleware {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err.Error())
 	}
+
+	casbinService, err := casbin.NewCasbinService()
+	if err != nil {
+		log.Fatalf("Failed to create casbin service: %v", err.Error())
+	}
+
 	authMiddle := NewAuthMiddleware(&cfg.JWT)
-	return &middleware{authMiddleware: authMiddle}
+	authzMiddle := NewAuthorizationMiddleware(casbinService)
+	return &middleware{authMiddleware: authMiddle, authorizationMiddleware: authzMiddle}
 }
 
-func (m *middleware) Auth() AuthMiddleware { return m.authMiddleware }
+func (m *middleware) Auth() AuthMiddleware                   { return m.authMiddleware }
+func (m *middleware) Authorization() AuthorizationMiddleware { return m.authorizationMiddleware }
