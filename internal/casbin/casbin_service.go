@@ -13,7 +13,7 @@ type casbinService struct {
 }
 
 func NewCasbinService() (CasbinService, error) {
-	enforcer, err := casbin.NewEnforcer("model.conf", "policy.csv")
+	enforcer, err := casbin.NewEnforcer("internal/casbin/model.conf", "internal/casbin/policy.csv")
 	if err != nil {
 		return nil, err
 	}
